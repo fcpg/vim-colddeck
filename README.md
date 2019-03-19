@@ -15,21 +15,10 @@ Extra features:
   - Vim expressions (experimental) 
   - Value references (experimental)
 
-Usage
-------
+Example
+--------
 
-```
-$ cat > budget.cdeck <<xox
-300        # food
-800        # rent
-50         # bills
-250        # misc
-R1:R4@sum  ## Total
-R-1 12*    ## Yearly
-xox
-
-$ vim budget.cdeck
-```
+[![asciicast](https://asciinema.org/a/0NgfyWgetZBIoXi6O3ikawkIE.svg)](https://asciinema.org/a/0NgfyWgetZBIoXi6O3ikawkIE)
 
 Syntax in a nutshell
 ---------------------

@@ -19,8 +19,10 @@ command! -bar CDClear
 command! -bar CDToggleAutocalc
       \  if !get(b:, 'cdeck_auto_', 0)
       \|   call colddeck#SetAutoCalc()
+      \|   echo "AutoCalc ON"
       \| else
       \|   call colddeck#UnsetAutoCalc()
+      \|   echo "AutoCalc OFF"
       \| endif
 
 " Move the result column (absolute pos, or relative with +/- prefix)

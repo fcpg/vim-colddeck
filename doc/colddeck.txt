@@ -1,0 +1,222 @@
+*colddeck.txt*                   Column dc                             *colddeck*
+
+                            Colddeck MANUAL
+
+1. About colddeck                                  |colddeck-about|
+2. Quick Start                                     |colddeck-quickstart|
+3. Syntax                                          |colddeck-syntax|
+4. Default Mappings                                |colddeck-default-mappings|
+5. Commands                                        |colddeck-commands|
+6. Options                                         |colddeck-options|
+7. Changelog                                       |colddeck-changelog|
+8. Contribute                                      |colddeck-contribute|
+9. License                                         |colddeck-license|
+
+=============================================================================
+ABOUT COLDDECK                                                 *colddeck-about*
+
+Colddeck turns Vim into a simple column-based spreadsheet, ala instacalc.com.
+
+All lines are fed into the `dc` program, that must be installed on your system.
+
+Features:
+
+  - RPN-based computations
+  - References to other rows
+  - Ranges
+  - Aggregates (sum, min/max, average...)
+  - Vim expressions (experimental) 
+  - Value references (experimental)
+
+=============================================================================
+QUICK START                                               *colddeck-quickstart*
+
+1. Install the plugin Eg. with Pathogen:
+>
+   cd ~/.vim/bundle && git clone https://github.com/fcpg/vim-colddeck
+<
+   or using vim8 package management:
+>
+   cd ~/.vim/pack/std/start && git clone https://github.com/fcpg/vim-colddeck
+<
+2. Open a file with the `.cdeck` extension:
+>
+   vim budget.cdeck
+<
+3. Insert some lines on top (comments included):
+>
+   300        # food
+   800        # rent
+   50         # bills
+   250        # misc
+   R1:R4@sum  ## Total
+   R5 12*     ## Yearly
+<
+=============================================================================
+SYNTAX                                                        *colddeck-syntax*
+
+Each line is a `dc` command, that will be fed directly to `dc`, from top to
+bottom. Each command is run on an empty stack. Once the command is run, the
+result inserted into the buffer is the one at the top of the stack.
+
+Lines can include comments, starting with `#`. They are not passed to `dc`.
+
+Comments with double hash (`##`) hide the command part, and the comment text
+becomes right-aligned by default. Delete one hash to edit the command again.
+
+Commands can reference other lines with the `R+num` syntax, eg. `R1`, `R3` etc.
+Internally, commands are stored as macros, and they are executed each time
+they are referenced.
+
+Relative references are in the form `R+1` and `R-2`, to refer to the next row
+or the second row above, respectively.
+
+Several references can be used with ranges, using the syntax `ref:ref`, eg.
+`R1:R3`. This will insert the values from the range, with the total number
+of inserted elements at the top of the stack (so, `R1:R3` will insert the
+value of `R1`, `R2` and `R3`, with an extra `3` on top of the stack.
+
+A few aggregates are available, implemented internally with `dc` macros:
+  - `@sum`
+  - `@prod`
+  - `@avg`
+  - `@min`
+  - `@max`
+
+They expected values on the stack, with the number of elements on top.
+This makes it easy to work with ranges:
+>
+  R1:R3 @sum
+<
+will compute the sum from `R1` to `R3`.
+
+Experimental: vim expressions can be inserted on the line, before feeding
+the line to `dc`. It is thus a kind of vim preprocessor:
+>
+  `log(2)` 2*
+<
+will double the natural log of 2.
+
+Experimental: the result of another line can be referenced with the `$+num`
+syntax eg. `$2`. This means the result must already be availble, ie. 
+computations have at least be run once. This allows things like:
+>
+  `sin($2)`
+<
+which can be convenient since good old `dc` does not offer much maths
+functions. Unfortunately, the whole mechanism remains pretty kludgy.
+
+A few notes:
+  - dc registers under chr(48) are reserved for internal purposes.
+  - The `?` register contains the string `True`, allowing things like `0 0=?` .
+    This is for mere convenience, and can be overridden if need be.
+  - Commands can return several values; only the last one will be shown on
+    result, but all values will be used by other references.
+
+=============================================================================
+DEFAULT MAPPINGS                                    *colddeck-default-mappings*
+
+<LocalLeader>x
+  Compute results and insert them into buffer.
+
+<LocalLeader>c
+  Clear results from buffer.
+
+<LocalLeader>a
+  Toggle automatic insertion/updates of results.
+
+<LocalLeader>h
+  Toggle automatic right-alignment of "hiding comments" (`## comment`).
+
+<LocalLeader><
+  Move all results five chars to the left (also takes numeric argument).
+
+<LocalLeader>>
+  Move all results five chars to the right (also takes numeric argument).
+
+=============================================================================
+COMMANDS                                                    *colddeck-commands*
+
+:CDCalc                                                               *:CDCalc*
+  Compute results and insert them into buffer.
+
+:CDClear                                                             *:CDClear*
+  Clear results from buffer.
+
+:CDToggleAutocalc                                           *:CDToggleAutocalc*
+  Toggle automatic insertion/updates of results.
+
+:CDAlignHidingComments                                 *:CDAlignHidingComments*
+  Toggle automatic right-alignment of "hiding comments" (`## comment`).
+
+:CDMoveRCol {col}                                                 *:CDMoveRCol*
+  Move all results to the {col} column.
+  If {col} starts with a -/+, it moves all results of that many columns
+  to the left/right.
+
+=============================================================================
+OPTIONS                                                      *colddeck-options*
+
+g:cdeck_autocalc                                             *g:cdeck_autocalc*
+  Set to 0 to disable automatic computation and insertion
+  of results.
+  Default: 1
+
+g:cdeck_rcol                                                     *g:cdeck_rcol*
+  Column where results will be inserted.
+  Global or buffer-local.
+  Default: 78
+
+g:cdeck_prec                                                     *g:cdeck_prec*
+  Precision, for floats.
+  Global or buffer-local.
+  Default: 2
+
+g:cdeck_precmd                                                 *g:cdeck_precmd*
+  User-defined dc commands to run at each invocation.
+  Global or buffer-local.
+  Default: none
+
+g:cdeck_autoahc                                               *g:cdeck_autoahc*
+  Set to 0 to disable automatic 'hidden comments' alignement.
+  Global or buffer-local.
+  Default: 1
+
+g:cdeck_rchar                                                   *g:cdeck_rchar*
+  Char separating buffer content from results.
+  Global or buffer-local.
+  Default: `>`
+
+g:cdeck_saveresults                                       *g:cdeck_saveresults*
+  Set to 1 to include results when saving buffer.
+  Global or buffer-local.
+  Default: 0
+
+g:cdeck_nomaps                                                 *g:cdeck_nomaps*
+  Set to 1 to disable buffer-local mappings creation in
+  colddeck buffers.
+  Default: 0
+
+g:cdeck_dcerr                                                   *g:cdeck_dcerr*
+  Set to 1 to show dc error messages for debugging purposes.
+  Warning: will mess with results.
+  Global or buffer-local.
+  Default: 0
+
+=============================================================================
+CHANGELOG                                                  *colddeck-changelog*
+
+[1.0] - 2019-03-19
+  - Initial release
+
+=============================================================================
+CONTRIBUTE                                                *colddeck-contribute*
+
+Contribute on [Github](https://github.com/fcpg/vim-colddeck)
+
+=============================================================================
+LICENSE                                                      *colddeck-license*
+
+[Attribution-ShareAlike 4.0 Int.](https://creativecommons.org/licenses/by-sa/4.0/)
+
+ vim: set expandtab sts=2 ts=2 sw=2 tw=78 ft=help norl:

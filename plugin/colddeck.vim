@@ -30,8 +30,17 @@ command! -bar -nargs=1 CDMoveRCol
       \ call colddeck#MoveRcol(<q-args>)
 
 " Right-align 'hiding comments' near results
-command! -bar -nargs=1 CDAlignHidingComments
+command! -bar CDAlignHidingComments
       \ call colddeck#AlignHidingComments()
+
+" Toggle normal/hiding comments
+let s:keeppa = exists(':keeppattern') ? 'keeppa' : ''
+command! -bar CDToggleHidingComments
+      \  if getline('.') =~ '##'
+      \|   silent exe s:keeppa 's/##/# /e'
+      \| else
+      \|   silent exe s:keeppa 's/# /##/e'
+      \| endif
 
 
 "---------------
@@ -42,11 +51,17 @@ if !get(g:, 'cdeck_nomaps', 0)
   nnoremap <silent>  <Localleader>x  :<C-u>CDCalc<cr>
   nnoremap <silent>  <Localleader>c  :<C-u>CDClear<cr>
   nnoremap <silent>  <Localleader>a  :<C-u>CDToggleAutocalc<cr>
-  nnoremap <silent>  <Localleader>h  :<C-u>CDAlignHidingComments<cr>
+  nnoremap <silent>  <Localleader>A  :<C-u>CDAlignHidingComments<cr>
+
+  nnoremap <silent>  <Localleader>h  :<C-u>CDToggleHidingComments<cr>
   nnoremap <silent>  <Localleader><
         \ :<C-u>CDMoveRCol <C-r>=empty(v:count)? "-5" : v:count<cr><cr>
   nnoremap <silent>  <Localleader>>
         \ :<C-u>CDMoveRCol <C-r>=empty(v:count)? "+5" : v:count<cr><cr>
+  nnoremap <silent>  <Localleader>$  :<C-u>call search('\v^.*\zs\S\ze%<'.
+        \ (get(b:, "cdeck_rcol", get(g:, "cdeck_rcol", 78))+1) . 'v.',
+        \ '',
+        \ line('.'))<cr>
 endif
 
 

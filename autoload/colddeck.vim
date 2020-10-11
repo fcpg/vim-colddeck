@@ -212,7 +212,7 @@ function! colddeck#CalcBuffer() abort
   let b:cdeck_results = {}
   while linenr <= lastlinenr
     let curline    = getline(linenr)
-    let linelen    = strlen(curline)
+    let linelen    = strwidth(curline)
     let fillcount  = max([rcol - linelen, 1])
     let lineresult = get(dc_result, linenr - 1, s:err_notavail)
     if !empty(lineresult)
